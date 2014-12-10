@@ -1,6 +1,10 @@
 import shutil
 import os
-import pandas
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
 from mutagen.flac import FLAC
 
 src = '/Projects/InPho/testing/'
@@ -27,18 +31,65 @@ def find_flacs(path):
     return fullPaths, justFileNames
 
 
-def flac_metadata_reader(path):
-	fullPaths, justFileNames = find_flacs(path)
 
+
+
+def buildMetaDataFrame(pathOfFiles):
+	fullPaths, justFileNames = find_flacs(pathOfFiles) 
+
+	df = pd.DataFrame(columns = ['Inmate Name', 'NYSID', 'BAC', 'FileName', 'NumberDialed', 
+								'extension', 'facility', 'start_time (hhmmss)', 
+								'start_date (yyyymmdd)'])
+	
+	# somewhere to store lists after the loop
+	called_numbers = []
+	nysids = []
+	names = [] 
+	extensions = []
+	facilities = [] 
+	bacs = []
+	start_times = []
+	start_dates = []
+
+	# loop to get my list of values
 	for file in fullPaths:
 		track = FLAC(file)
 		try:
-			print track
-			print '\n'
+			called_numbers .append(track['called_number'])
+			nysids.append(track['nysid'])
+			names.append(track['name'])
+			extensions.append(track['extension'])
+			facilities.append(track['facility'])
+			bacs.append(track['bac'])
+			start_times.append(track['start_time (hhmmss)'])
+			start_dates.append(track['start_date (yyyymmdd)'])
+
 		except Exception as err:
 			print (err)
 
-	print str(len(justFileNames)) + " files in this directory \n"
+	# put the values into my pandas dataframe
+	df['NumberDialed'] = called_numbers
+	df['NYSID'] = nysids
+	df['Inmate Name'] = names
+	df['extension'] = extensions
+	df['facility'] = facilities
+	df['BAC'] = bacs
+	df['start_time (hhmmss)'] = start_times
+	df['start_date (yyyymmdd)'] = start_dates
+	df['FileName'] = justFileNames
+
+	numberOfFiles = len(fullPaths)
+
+	result = df
+	return result, numberOfFiles, fullPaths, justFileNames
 
 
-flac_metadata_reader(src)
+
+def InPhoFrame(src):
+	result, numberOfFiles, fullPaths, justFileNames = buildMetaDataFrame(src)
+
+	print result
+
+
+
+InPhoFrame(src)
