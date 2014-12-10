@@ -5,7 +5,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from mutagen.flac import FLAC
+from datetime import datetime
+
+from mutagen.flac import *
+
 
 src = '/Projects/InPho/testing/'
 
@@ -37,9 +40,9 @@ def find_flacs(path):
 def buildMetaDataFrame(pathOfFiles):
 	fullPaths, justFileNames = find_flacs(pathOfFiles) 
 
-	df = pd.DataFrame(columns = ['Inmate Name', 'NYSID', 'BAC', 'FileName', 'NumberDialed', 
-								'extension', 'facility', 'start_time (hhmmss)', 
-								'start_date (yyyymmdd)'])
+	df = pd.DataFrame(columns = ['InmateName', 'NYSID', 'BAC', 'DateTime', 'NumberDialed', 
+								'Duration', 'Facility', 'Extension', 'FileName', 'start_time', 
+								'start_date'])
 	
 	# somewhere to store lists after the loop
 	called_numbers = []
@@ -50,33 +53,39 @@ def buildMetaDataFrame(pathOfFiles):
 	bacs = []
 	start_times = []
 	start_dates = []
+	duration = []
 
 	# loop to get my list of values
 	for file in fullPaths:
 		track = FLAC(file)
 		try:
-			called_numbers .append(track['called_number'])
-			nysids.append(track['nysid'])
-			names.append(track['name'])
-			extensions.append(track['extension'])
-			facilities.append(track['facility'])
-			bacs.append(track['bac'])
-			start_times.append(track['start_time (hhmmss)'])
-			start_dates.append(track['start_date (yyyymmdd)'])
+			called_numbers.append(''.join(track.get('called_number')))
+			nysids.append(''.join(track.get('nysid')))
+			names.append(''.join(track.get('name')))
+			extensions.append(''.join(track.get('extension')))
+			facilities.append(''.join(track.get('facility')))
+			bacs.append(''.join(track.get('bac')))
+			start_times.append(''.join(track.get('start_time (hhmmss)')))
+			start_dates.append(''.join(track.get('start_date (yyyymmdd)')))
+			duration.append(track.info.length)
 
 		except Exception as err:
 			print (err)
 
+
+
 	# put the values into my pandas dataframe
 	df['NumberDialed'] = called_numbers
 	df['NYSID'] = nysids
-	df['Inmate Name'] = names
-	df['extension'] = extensions
-	df['facility'] = facilities
+	df['InmateName'] = names
+	df['Extension'] = extensions
+	df['Facility'] = facilities
 	df['BAC'] = bacs
-	df['start_time (hhmmss)'] = start_times
-	df['start_date (yyyymmdd)'] = start_dates
+	df['start_time'] = start_times
+	df['start_date'] = start_dates
 	df['FileName'] = justFileNames
+	df['Duration'] = duration
+
 
 	numberOfFiles = len(fullPaths)
 
@@ -85,11 +94,20 @@ def buildMetaDataFrame(pathOfFiles):
 
 
 
-def InPhoFrame(src):
+def createInPhoFrame(src):
+
+	# take in a pandas dataframe after scanning for flacs
 	result, numberOfFiles, fullPaths, justFileNames = buildMetaDataFrame(src)
+	df = result 
 
-	print result
+	# toss the isolated time and date columns
+	df['DateTime'] = pd.DatetimeIndex(df['start_date'] + df['start_time'])
+	df = df.drop(['start_time', 'start_date'], 1)
+
+	result = df
+
+	return result
 
 
-
-InPhoFrame(src)
+result = createInPhoFrame(src)
+print result
