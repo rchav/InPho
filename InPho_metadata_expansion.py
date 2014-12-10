@@ -34,10 +34,7 @@ def find_flacs(path):
     return fullPaths, justFileNames
 
 
-
-
-
-def buildMetaDataFrame(pathOfFiles):
+def build_metadata_frame(pathOfFiles):
 	fullPaths, justFileNames = find_flacs(pathOfFiles) 
 
 	df = pd.DataFrame(columns = ['InmateName', 'NYSID', 'BAC', 'DateTime', 'NumberDialed', 
@@ -94,10 +91,10 @@ def buildMetaDataFrame(pathOfFiles):
 
 
 
-def createInPhoFrame(src):
+def create_InPho_frame(src):
 
 	# take in a pandas dataframe after scanning for flacs
-	result, numberOfFiles, fullPaths, justFileNames = buildMetaDataFrame(src)
+	result, numberOfFiles, fullPaths, justFileNames = build_metadata_frame(src)
 	df = result 
 
 	# toss the isolated time and date columns
@@ -109,5 +106,5 @@ def createInPhoFrame(src):
 	return result
 
 
-result = createInPhoFrame(src)
+result = create_InPho_frame(src)
 print result
