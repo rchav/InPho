@@ -26,7 +26,8 @@ class interface(Tkinter.Tk):
         Tkinter.Tk.__init__(self, parent)
         self.parent = parent
         self.initialize()
- 
+    
+    
     def initialize(self):
         self.grid()
 
@@ -34,13 +35,19 @@ class interface(Tkinter.Tk):
         matterLabelVar = Tkinter.StringVar()
         matterLabel = Tkinter.Label(self, textvariable=matterLabelVar, anchor="w", 
                                     justify="left", fg="black", font="Constantia 10 bold")
-        matterLabel.grid(column=0,row=1, sticky='W')
+        matterLabel.grid(column=0,columnspan=2,row=1, sticky='W')
         matterLabelVar.set(u"Enter DANY matter/case number:")
 
         #setup the matterNumber box        
         self.matterVariable = Tkinter.StringVar()
+        self.matterVariable.set("Matter number")
         self.matterBox = Tkinter.Entry(self, textvariable = self.matterVariable)
         self.matterBox.grid(column=0,row=2,sticky='EW',padx=10)
+
+        #setup the partial box        
+        self.partialVar = Tkinter.StringVar()
+        self.partialBox = Tkinter.Entry(self, textvariable = self.partialVar)
+        self.partialBox.grid(column=1,row=2,sticky='EW',padx=10)
 
         # pressing Return does something
         self.matterBox.bind("<Return>", self.OnPressEnter)
@@ -48,7 +55,7 @@ class interface(Tkinter.Tk):
         #configure the verifyMatterNumber button
         verifyMatterNumberButton = Tkinter.Button(self,text=u"Verify Matter Number", 
                                                   command=self.OnButtonClick)
-        verifyMatterNumberButton.grid(column=1,row=2)
+        verifyMatterNumberButton.grid(column=2,row=2)
         verifyMatterNumberButton.bind("<Return>", self.OnPressEnter)
 
 
@@ -90,7 +97,7 @@ class interface(Tkinter.Tk):
         otherOptionsVar = Tkinter.StringVar()
         otherOptionsLabel = Tkinter.Label(self, textvariable=otherOptionsVar, anchor="w", 
                                  justify="left", fg="black", font="Constantia 10 bold")
-        otherOptionsLabel.grid(column=0,row=20, sticky='W')
+        otherOptionsLabel.grid(column=0,columnspan=2,row=20, sticky='W')
         otherOptionsVar.set(u"Other import options:")        
         
         # add option to add to DANY SQL
@@ -103,7 +110,7 @@ class interface(Tkinter.Tk):
         self.multiDiskVar = Tkinter.IntVar()
         self.multiDiskVar.set(0)
         multiDiskCB = Tkinter.Checkbutton(text='This a multi-CD import ("Part 1 of 2" is written on this CD)', variable=self.multiDiskVar)
-        multiDiskCB.grid(column=0,row=35, columnspan=2,sticky='W')
+        multiDiskCB.grid(column=0,row=35, columnspan=3,sticky='W')
         
         # add option to add to x drive
         self.copyToXVar = Tkinter.IntVar()
@@ -132,37 +139,37 @@ class interface(Tkinter.Tk):
         self.statusVariable = Tkinter.StringVar()
         self.status = Tkinter.Label(self,textvariable=self.statusVariable, anchor="w",
                               fg="#f6731b",bg="#0154a0",font="Constantia 11")
-        self.status.grid(column=0,row=52,columnspan=3,sticky='EW')
+        self.status.grid(column=0,row=52,columnspan=4,sticky='EW')
         
         # ADA label
         self.adaVariable = Tkinter.StringVar()
         self.adaVariable.set(u"Docket, Indictment, ArrestID, ICMS, TDI (F-number)")
         ada = Tkinter.Label(self, textvariable=self.adaVariable, anchor="w",
                             justify="left",fg="black")
-        ada.grid(column=0,row=5,columnspan=2,sticky='w',padx=10)
+        ada.grid(column=0,row=5,columnspan=3,sticky='w',padx=10)
         
         # Email label
         self.emailVariable = Tkinter.StringVar()
         email = Tkinter.Label(self, textvariable=self.emailVariable, anchor="w",
                               justify="left",fg="black")
-        email.grid(column=0,row=7,sticky='w',padx=10)
+        email.grid(column=0,row=7,columnspan=3,sticky='w',padx=10)
         
         # Bureau label
         self.bureauVariable = Tkinter.StringVar()
         bureau = Tkinter.Label(self, textvariable=self.bureauVariable, anchor="w",
                                justify="left",fg="black")
-        bureau.grid(column=0,row=6,sticky='w',padx=10)
+        bureau.grid(column=0,row=6,columnspan=3, sticky='w',padx=10)
         
         # Case name label
         self.caseNameVariable = Tkinter.StringVar()
         caseName = Tkinter.Label(self, textvariable=self.caseNameVariable, anchor="w",
                                  justify="left",fg="black")
-        caseName.grid(column=0,row=8,sticky='w',padx=10)
+        caseName.grid(column=0,row=8,columnspan=3,sticky='w',padx=10)
       
         # configure the CSV button
         CSVButton = Tkinter.Button(self,text=u"Import Calls", command=self.OnCSVImport,
                                    font="Constantia 12 bold")
-        CSVButton.grid(column=0,row=50,columnspan=2)
+        CSVButton.grid(column=0,row=50,columnspan=3)
         
         # empty bar above DOC and type radio buttons
         self.blankVar1 = Tkinter.StringVar()
@@ -354,145 +361,152 @@ class ImportTool:
         else:
             self.corruptCSV = False
             try:
-				# Create a new column that concatenates 'LastName' and 'FirstName'
-				df['InmateName'] = df['LastName'] + ', ' + df['FirstName']
-				# Delete 'LastName' and 'FirstName' columns
-				df = df.drop(['LastName', 'FirstName'], 1)
-				numberOfCalls = len(df.index) 
+                # Create a new column that concatenates 'LastName' and 'FirstName'
+                df['InmateName'] = df['LastName'] + ', ' + df['FirstName']
+                # Delete 'LastName' and 'FirstName' columns
+                df = df.drop(['LastName', 'FirstName'], 1)
+                numberOfCalls = len(df.index) 
     
-				# create and set the FileName column
-				temp = pd.DatetimeIndex(df['DateTime'])
-				df['Year'] = temp.year
-				df['Day'] = temp.day
-				df['Month'] = temp.month
-				df['Hour'] = temp.hour
-				df['Minute'] = temp.minute
-				df['Second'] = temp.second
-				
+                # create and set the FileName column
+                temp = pd.DatetimeIndex(df['DateTime'])
+                df['Year'] = temp.year
+                df['Day'] = temp.day
+                df['Month'] = temp.month
+                df['Hour'] = temp.hour
+                df['Minute'] = temp.minute
+                df['Second'] = temp.second
+                
     
-				dateOfChange = datetime.date(2014, 03, 28)
-				print numberOfCalls 
+                dateOfChange = datetime.date(2014, 03, 28)
+                print numberOfCalls 
     
-				df.loc[df['DateTime'] < dateOfChange, 'FileName'] = df.BAC.map(str) + '_' + df.Year.map("{:04}".format, str) + df.Month.map("{:02}".format, str) + df.Day.map("{:02}".format, str) + df.Hour.map("{:02}".format, str) + df.Minute.map("{:02}".format, str) + df.Second.map("{:02}".format, str)
-				df.loc[df['DateTime'] > dateOfChange, 'FileName'] = df.BAC.map(str) + '_' + df.Year.map("{:04}".format, str) + df.Month.map("{:02}".format, str) + df.Day.map("{:02}".format, str) + df.Hour.map("{:02}".format, str) + df.Minute.map("{:02}".format, str) + df.Second.map("{:02}".format, str) + "_" + df.NumberDialed.map(str)
-				
-				
-				# create and set the MatterName and Bureau column
-				if importTool.isDocket:
-					df['MatterName'] = "People v. " + str(importTool.defendant.title()).strip()
-					df['Bureau'] = str(importTool.bureau)
-				elif importTool.isIndictment:
-					df['MatterName'] = "People v. " + str(importTool.defendant.title()).strip()
-					df['Bureau'] = str(importTool.bureau)
-				elif importTool.isArrestID:
-					df['MatterName'] = "People v. " + str(importTool.defendant.title()).strip()
-					df['Bureau'] = str(importTool.bureau)
-				elif importTool.isICMS:
-					df['MatterName'] = str(importTool.casename)
-					df['Bureau'] = str(importTool.Bureau)
-				elif importTool.isFNumber:
-					df['MatterName'] = str(importTool.InvestigationName)
-					df['Bureau'] = str(importTool.BureauFullName)
-				else:
-					df['MatterName'] = "Unknown matter name"
-					df['Bureau'] = "Unknown bureau name"
-		
-				# create and set the Contact, ContactUsername, and MatterNumber columns
-				df['Contact'] = str(importTool.ADA)
-				df['ContactUsername'] = str(importTool.ADAUsername)
-				df['MatterNumber'] = app.matterVariable.get().upper()
-				df['ComplianceMethod'] = app.complianceMethodVariable.get()
-				df['NumberOfDisks'] = 1
-				df['DOCTrackingNumber'] = ""
-				df['ProcessedBy'] = getpass.getuser()
-				df['DateTimeProcessed'] = datetime.datetime.now()
+                df.loc[df['DateTime'] < dateOfChange, 'FileName'] = df.BAC.map(str) + '_' + df.Year.map("{:04}".format, str) + df.Month.map("{:02}".format, str) + df.Day.map("{:02}".format, str) + df.Hour.map("{:02}".format, str) + df.Minute.map("{:02}".format, str) + df.Second.map("{:02}".format, str)
+                df.loc[df['DateTime'] > dateOfChange, 'FileName'] = df.BAC.map(str) + '_' + df.Year.map("{:04}".format, str) + df.Month.map("{:02}".format, str) + df.Day.map("{:02}".format, str) + df.Hour.map("{:02}".format, str) + df.Minute.map("{:02}".format, str) + df.Second.map("{:02}".format, str) + "_" + df.NumberDialed.map(str)
+                
+                
+                # create and set the MatterName and Bureau column
+                if importTool.isDocket:
+                    df['MatterName'] = "People v. " + str(importTool.defendant.title()).strip()
+                    df['Bureau'] = str(importTool.bureau)
+                elif importTool.isIndictment:
+                    df['MatterName'] = "People v. " + str(importTool.defendant.title()).strip()
+                    df['Bureau'] = str(importTool.bureau)
+                elif importTool.isArrestID:
+                    df['MatterName'] = "People v. " + str(importTool.defendant.title()).strip()
+                    df['Bureau'] = str(importTool.bureau)
+                elif importTool.isICMS:
+                    df['MatterName'] = str(importTool.casename)
+                    df['Bureau'] = str(importTool.Bureau)
+                elif importTool.isFNumber:
+                    df['MatterName'] = str(importTool.InvestigationName)
+                    df['Bureau'] = str(importTool.BureauFullName)
+                else:
+                    df['MatterName'] = "Unknown matter name"
+                    df['Bureau'] = "Unknown bureau name"
+        
+                # create and set the Contact, ContactUsername, and MatterNumber columns
+                df['Contact'] = str(importTool.ADA)
+                df['ContactUsername'] = str(importTool.ADAUsername)
+                
+                tmpMatter = app.matterVariable.get().upper()
+                tmpPartial = app.partialVar.get().upper()
 
-				#change column types to match DB				
-				df['BAC'] = df['BAC'].astype(object)
-				df['NumberDialed'] = df['NumberDialed'].astype(object)
-				df['Duration'] = df['Duration'].astype(object) 
-				df['Extension'] = df['Extension'].astype(object)    
-				df['NumberOfDisks'] = df['NumberOfDisks'].astype(object)    
+                if len(tmpPartial) > 0:
+                    df['MatterNumber'] = tmpMatter + tmpPartial
+                else:
+                    df['MatterNumber'] = tmpMatter
+
+                df['ComplianceMethod'] = app.complianceMethodVariable.get()
+                df['NumberOfDisks'] = 1
+                df['DOCTrackingNumber'] = ""
+                df['ProcessedBy'] = getpass.getuser()
+                df['DateTimeProcessed'] = datetime.datetime.now()
+
+                #change column types to match DB                
+                df['BAC'] = df['BAC'].astype(object)
+                df['NumberDialed'] = df['NumberDialed'].astype(object)
+                df['Duration'] = df['Duration'].astype(object) 
+                df['Extension'] = df['Extension'].astype(object)    
+                df['NumberOfDisks'] = df['NumberOfDisks'].astype(object)    
     
-				# Reorder columns appropriately
-				df = df[['InmateName', 'NYSID', 'BAC', 'DateTime', 'NumberDialed', 
-						 'Duration', 'Facility', 'Extension', 'FileName', 'MatterName', 'MatterNumber', 'Contact', 'ContactUsername', 'Bureau', 
-						 'ComplianceMethod', 'DOCTrackingNumber', 'NumberOfDisks', 'ProcessedBy', 'DateTimeProcessed']]
-		
-				# Save DataFrame to CSV
-				# df.to_csv("recording_file_revised.csv", index=False)
-		
+                # Reorder columns appropriately
+                df = df[['InmateName', 'NYSID', 'BAC', 'DateTime', 'NumberDialed', 
+                         'Duration', 'Facility', 'Extension', 'FileName', 'MatterName', 'MatterNumber', 'Contact', 'ContactUsername', 'Bureau', 
+                         'ComplianceMethod', 'DOCTrackingNumber', 'NumberOfDisks', 'ProcessedBy', 'DateTimeProcessed']]
+        
+                # Save DataFrame to CSV
+                # df.to_csv("recording_file_revised.csv", index=False)
+        
                     
-				# SQL direct insert
-#				engine = sql.create_engine('mssql+pyodbc://DTC-SQL10/MasterCallDb')
-#				df.to_sql('InmateCalls', engine, if_exists='append')
+                # SQL direct insert
+#               engine = sql.create_engine('mssql+pyodbc://DTC-SQL10/MasterCallDb')
+#               df.to_sql('InmateCalls', engine, if_exists='append')
 
                     
                     # SQL using stored procedure
 
-        			x = 0    				
-    				
-    				while x < numberOfCalls:
-        				
-#        				sqlInmateName = 'N' + df.loc[x, 'InmateName']
-#        				sqlNYSID = 'N' + df.loc[x, 'NYSID']
-#        				sqlBAC = 'N' + df.loc[x, 'BAC']
-#        				sqlDateTime = 'N' + df.loc[x, 'DateTime']
-#        				sqlNumberDialed = 'N' + df.loc[x, 'NumberDialed']
-#        				sqlDuration = 'N' + df.loc[x, 'Duration']
-#        				sqlFacility = 'N' + df.loc[x, 'Facility']
-#        				sqlExtension = 'N' + df.loc[x, 'Extension']
-#        				sqlFileName = 'N' + df.loc[x, 'FileName']
-#        				sqlMatterName = 'N' + df.loc[x, 'MatterName']
-#        				sqlMatterNumber = 'N' + df.loc[x, 'MatterNumber']
-#        				sqlContact = 'N' + df.loc[x, 'Contact']
-#        				sqlContactUsername = 'N' + df.loc[x, 'ContactUsername']
-#        				sqlBureau = 'N' + df.loc[x, 'Bureau']
-#        				sqlComplianceMethod = 'N' + df.loc[x, 'ComplianceMethod']
-#        				sqlDOCTrackingNumber = 'N' + df.loc[x, 'DOCTrackingNumber']
-#        				sqlNumberOfDisks = 'N' + df.loc[x, 'NumberOfDisks']
-#        				sqlProcessedBy = 'N' + df.loc[x, 'ProcessedBy']
-#        				sqlDateTimeProcessed = 'N' + df.loc[x, 'DateTimeProcessed']
+                x = 0                   
+                    
+                while x < numberOfCalls:
+                        
+#                       sqlInmateName = 'N' + df.loc[x, 'InmateName']
+#                       sqlNYSID = 'N' + df.loc[x, 'NYSID']
+#                       sqlBAC = 'N' + df.loc[x, 'BAC']
+#                       sqlDateTime = 'N' + df.loc[x, 'DateTime']
+#                       sqlNumberDialed = 'N' + df.loc[x, 'NumberDialed']
+#                       sqlDuration = 'N' + df.loc[x, 'Duration']
+#                       sqlFacility = 'N' + df.loc[x, 'Facility']
+#                       sqlExtension = 'N' + df.loc[x, 'Extension']
+#                       sqlFileName = 'N' + df.loc[x, 'FileName']
+#                       sqlMatterName = 'N' + df.loc[x, 'MatterName']
+#                       sqlMatterNumber = 'N' + df.loc[x, 'MatterNumber']
+#                       sqlContact = 'N' + df.loc[x, 'Contact']
+#                       sqlContactUsername = 'N' + df.loc[x, 'ContactUsername']
+#                       sqlBureau = 'N' + df.loc[x, 'Bureau']
+#                       sqlComplianceMethod = 'N' + df.loc[x, 'ComplianceMethod']
+#                       sqlDOCTrackingNumber = 'N' + df.loc[x, 'DOCTrackingNumber']
+#                       sqlNumberOfDisks = 'N' + df.loc[x, 'NumberOfDisks']
+#                       sqlProcessedBy = 'N' + df.loc[x, 'ProcessedBy']
+#                       sqlDateTimeProcessed = 'N' + df.loc[x, 'DateTimeProcessed']
 
-        				sqlInmateName = str(df.loc[x, 'InmateName'])
-        				sqlNYSID = df.loc[x, 'NYSID']
-        				sqlBAC = df.loc[x, 'BAC']
-        				sqlDateTime = df.loc[x, 'DateTime']
-        				sqlNumberDialed = df.loc[x, 'NumberDialed']
-        				sqlDuration = df.loc[x, 'Duration']
-        				sqlFacility = df.loc[x, 'Facility']
-        				sqlExtension = df.loc[x, 'Extension']
-        				sqlFileName = df.loc[x, 'FileName']
-        				sqlMatterName = str(df.loc[x, 'MatterName'])
-        				sqlMatterNumber = df.loc[x, 'MatterNumber']
-        				sqlContact = str(df.loc[x, 'Contact'])
-        				sqlContactUsername = df.loc[x, 'ContactUsername']
-        				sqlBureau = df.loc[x, 'Bureau']
-        				sqlComplianceMethod = df.loc[x, 'ComplianceMethod']
-        				sqlDOCTrackingNumber = df.loc[x, 'DOCTrackingNumber']
-        				sqlNumberOfDisks = df.loc[x, 'NumberOfDisks']
-        				sqlProcessedBy = df.loc[x, 'ProcessedBy']
-        				sqlDateTimeProcessed = str(df.loc[x, 'DateTimeProcessed'])
+                    sqlInmateName = str(df.loc[x, 'InmateName'])
+                    sqlNYSID = df.loc[x, 'NYSID']
+                    sqlBAC = df.loc[x, 'BAC']
+                    sqlDateTime = df.loc[x, 'DateTime']
+                    sqlNumberDialed = df.loc[x, 'NumberDialed']
+                    sqlDuration = df.loc[x, 'Duration']
+                    sqlFacility = df.loc[x, 'Facility']
+                    sqlExtension = df.loc[x, 'Extension']
+                    sqlFileName = df.loc[x, 'FileName']
+                    sqlMatterName = str(df.loc[x, 'MatterName'])
+                    sqlMatterNumber = df.loc[x, 'MatterNumber']
+                    sqlContact = str(df.loc[x, 'Contact'])
+                    sqlContactUsername = df.loc[x, 'ContactUsername']
+                    sqlBureau = df.loc[x, 'Bureau']
+                    sqlComplianceMethod = df.loc[x, 'ComplianceMethod']
+                    sqlDOCTrackingNumber = df.loc[x, 'DOCTrackingNumber']
+                    sqlNumberOfDisks = df.loc[x, 'NumberOfDisks']
+                    sqlProcessedBy = df.loc[x, 'ProcessedBy']
+                    sqlDateTimeProcessed = str(df.loc[x, 'DateTimeProcessed'])
+                    sqlInmateName = sqlInmateName.replace("'","''")
+                    sqlMatterName = sqlMatterName.replace("'","''")
+                    sqlContact = sqlContact.replace("'","''")    
+                    sqlDateTimeProcessed, temp = sqlDateTimeProcessed.split('.')
 
-        				sqlInmateName = sqlInmateName.replace("'","''")
-        				sqlMatterName = sqlMatterName.replace("'","''")
-        				sqlContact = sqlContact.replace("'","''")    
-        				sqlDateTimeProcessed, temp = sqlDateTimeProcessed.split('.')
+                    cnxn = pyodbc.connect('Driver={SQL Server};SERVER=dtc-sql10;DATABASE=MasterCallDb;Trusted_Connection=Yes;')
+                    cursor = cnxn.cursor()
 
-        				cnxn = pyodbc.connect('Driver={SQL Server};SERVER=dtc-sql10;DATABASE=MasterCallDb;Trusted_Connection=Yes;')
-        				cursor = cnxn.cursor()
+                    SQL = "EXEC [dbo].[usp_iInmateCalls] \n @InmateName = '" + str(sqlInmateName) + "', \n @NYSID = '" + str(sqlNYSID) + "', \n @BAC = '" + str(sqlBAC) + "', \n @DateTime = '" + str(sqlDateTime) + "', \n @NumberDialed = '" + str(sqlNumberDialed) + "', \n @Duration = " + str(sqlDuration) + ", \n @Facility = '" + str(sqlFacility) + "', \n @Extension = " + str(sqlExtension) + ", \n @FileName = '" + str(sqlFileName) + "', \n @MatterName = '" + str(sqlMatterName) + "', \n @MatterNumber = '" + str(sqlMatterNumber) + "', \n @Contact = '" + str(sqlContact) + "', \n @ContactUsername = '" + str(sqlContactUsername) + "', \n @Bureau = '" + str(sqlBureau) + "', \n @ComplianceMethod = '" + str(sqlComplianceMethod) + "', \n @DOCTrackingNumber = '" + str(sqlDOCTrackingNumber) + "', \n @NumberOfDisks = " + str(sqlNumberOfDisks) + ", \n @ProcessedBy = '" + str(sqlProcessedBy) + "', \n @DateTimeProcessed = '" + str(sqlDateTimeProcessed) + "'"
+                        
+                    cursor.execute(SQL)
+                    cursor.commit()            
 
-        				SQL = "EXEC [dbo].[usp_iInmateCalls] \n @InmateName = '" + str(sqlInmateName) + "', \n @NYSID = '" + str(sqlNYSID) + "', \n @BAC = '" + str(sqlBAC) + "', \n @DateTime = '" + str(sqlDateTime) + "', \n @NumberDialed = '" + str(sqlNumberDialed) + "', \n @Duration = " + str(sqlDuration) + ", \n @Facility = '" + str(sqlFacility) + "', \n @Extension = " + str(sqlExtension) + ", \n @FileName = '" + str(sqlFileName) + "', \n @MatterName = '" + str(sqlMatterName) + "', \n @MatterNumber = '" + str(sqlMatterNumber) + "', \n @Contact = '" + str(sqlContact) + "', \n @ContactUsername = '" + str(sqlContactUsername) + "', \n @Bureau = '" + str(sqlBureau) + "', \n @ComplianceMethod = '" + str(sqlComplianceMethod) + "', \n @DOCTrackingNumber = '" + str(sqlDOCTrackingNumber) + "', \n @NumberOfDisks = " + str(sqlNumberOfDisks) + ", \n @ProcessedBy = '" + str(sqlProcessedBy) + "', \n @DateTimeProcessed = '" + str(sqlDateTimeProcessed) + "'"
-        				
-        				cursor.execute(SQL)
-        				cursor.commit()            
-
-        				x += 1
+                    x += 1
        
        
             except IOError, e:
                 tkMessageBox.showerror("InPho", "Error: " + str(e))
-			
+            
 
     # Validation for matterNumber
     def validateMatterNumber(self, matterNumber):
@@ -920,5 +934,3 @@ app.title('DANY InPho (v.1.0)')
 app.iconbitmap(r'\\DANY.NYCNET\DANYXDrive\Rikers Calls\InPho\InPho Icon.ico')
 
 app.mainloop()
-
-
