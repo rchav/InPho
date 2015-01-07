@@ -1,11 +1,8 @@
 """
 ******************************************************************************
-
 DANY InPho: Import Tool v1.0.0
-
 Robert Chavez
 All rights reserved
-
 ******************************************************************************
 """
 
@@ -20,6 +17,7 @@ import tkMessageBox
 import os, os.path
 import shutil
 import sys
+import InPho_meta
 
 class interface(Tkinter.Tk):
     def __init__(self, parent):
@@ -208,11 +206,11 @@ class interface(Tkinter.Tk):
         #self.geometry("420x462+%d+%d" % (x,y))
         
         # regular size
-        self.geometry("420x438+%d+%d" % (x,y))
+        # self.geometry("420x438+%d+%d" % (x,y))
         
         
         # Mac size
-        # self.geometry("495x513+%d+%d" % (x,y))
+        self.geometry("495x513+%d+%d" % (x,y))
         
         
         self.matterBox.focus_set()
@@ -263,7 +261,14 @@ class interface(Tkinter.Tk):
                         self.copyToXVar.set(1)
             
                 except IOError,e:
-                    tkMessageBox.showerror("InPho", "Please make sure a CD is in your computer\n\n" + str(e))
+                    if e == "ERROR MESSAGE FOR CSV NOT FOUND":
+                        try:
+                            src = AskForFolderLocation()
+                            result = create_InPho_frame(src)
+                        except Exception, f:
+                            tkMessageBox.showerror("InPho", "Please make sure a CD is in your computer\n\n" + str(f))
+                    else: 
+                        tkMessageBox.showerror("InPho", "Please make sure a CD is in your computer\n\n" + str(e))
         
     def MultiCDImport(self):
         importTool.CopyFilesToX()
