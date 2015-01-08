@@ -448,6 +448,7 @@ class ImportTool:
 
             except IOError, e:
                 tkMessageBox.showerror("InPho", "SQL error: " + str(e))
+    
     def prepareMetadataFrame(self, InPhoFrame):
 
         if importTool.isDocket:
@@ -484,12 +485,12 @@ class ImportTool:
         InPhoFrame['NumberOfDisks'] = 1
         InPhoFrame['DOCTrackingNumber'] = ""
         InPhoFrame['ProcessedBy'] = getpass.getuser()
-        InPhoFrame['DateTimeProcessed'] = datetime.datetime.now()        
+        InPhoFrame['DateTimeProcessed'] = datetime.datetime.now()
+
+        InPhoFrame['FileName'] = InPhoFrame['FileName'].str.replace('.flac', '')
 
         # Reorder some columns                
         InPhoFrame = InPhoFrame[['InmateName', 'NYSID', 'BAC', 'DateTime', 'NumberDialed', 'Duration', 'Facility', 'Extension', 'FileName', 'MatterName', 'MatterNumber', 'Contact', 'ContactUsername', 'Bureau', 'ComplianceMethod', 'DOCTrackingNumber', 'NumberOfDisks', 'ProcessedBy', 'DateTimeProcessed']]
-
-        print InPhoFrame
         return InPhoFrame
 
     def addToSQL(self, InPhoFrame):
