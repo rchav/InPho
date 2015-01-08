@@ -114,7 +114,6 @@ class interface(Tkinter.Tk):
         self.copyToXVar = Tkinter.IntVar()
         self.copyToXVar.set(1)
 
-    
 
  # Uncomment this to turn on dev options        
 #        addToDANYSQLCB = Tkinter.Checkbutton(self, text="Add to DANY database?", 
@@ -206,11 +205,11 @@ class interface(Tkinter.Tk):
         #self.geometry("420x462+%d+%d" % (x,y))
         
         # regular size
-        # self.geometry("420x438+%d+%d" % (x,y))
+        self.geometry("420x438+%d+%d" % (x,y))
         
         
         # Mac size
-        self.geometry("495x513+%d+%d" % (x,y))
+        # self.geometry("495x513+%d+%d" % (x,y))
         
         
         self.matterBox.focus_set()
@@ -261,14 +260,22 @@ class interface(Tkinter.Tk):
                         self.copyToXVar.set(1)
             
                 except IOError,e:
-                    if e == "ERROR MESSAGE FOR CSV NOT FOUND":
+                    if str(e) == "File D:\RECORDING_FILE.CSV does not exist":
                         try:
-                            src = AskForFolderLocation()
-                            result = create_InPho_frame(src)
+                            src = "D:\\"
+                            result = InPho_meta.create_InPho_frame(src)
+                            if (self.copyToXVar.get() == 1) and (importTool.corruptCSV == False):
+                                metaFrame = importTool.prepareMetadataFrame(result)
+                                importTool.addToSQL(metaFrame)
+                                importTool.CopyFilesToX()
+                                self.copyToXVar.set(1)
+                                print "Metadata import should be in SQL now"
+
                         except Exception, f:
-                            tkMessageBox.showerror("InPho", "Please make sure a CD is in your computer\n\n" + str(f))
+                            tkMessageBox.showerror("InPho", "Something went wrong during the metadata extraction\n\n" + str(f))
                     else: 
                         tkMessageBox.showerror("InPho", "Please make sure a CD is in your computer\n\n" + str(e))
+                        print e
         
     def MultiCDImport(self):
         importTool.CopyFilesToX()
@@ -350,9 +357,7 @@ class ImportTool:
     def ImportCSV(self):
         self.file_path = self.src + "RECORDING_FILE.CSV"        
         
-        # Uncomment this to upload a repaired csv file
-        # self.file_path = "C:/Users/ChavezR/Desktop/RECORDING_FILE.CSV"
-    
+
         # Import the CSV file, set column names, fix date data, start on row 5
         df = pd.read_csv(str(self.file_path), names=['NYSID', 'BAC', 'Facility', 
                          'Extension', 'HousingArea', 'DateTime', 'NumberDialed'
@@ -438,61 +443,82 @@ class ImportTool:
                 df = df[['InmateName', 'NYSID', 'BAC', 'DateTime', 'NumberDialed', 
                          'Duration', 'Facility', 'Extension', 'FileName', 'MatterName', 'MatterNumber', 'Contact', 'ContactUsername', 'Bureau', 
                          'ComplianceMethod', 'DOCTrackingNumber', 'NumberOfDisks', 'ProcessedBy', 'DateTimeProcessed']]
-        
-                # Save DataFrame to CSV
-                # df.to_csv("recording_file_revised.csv", index=False)
-        
-                    
-                # SQL direct insert
-#               engine = sql.create_engine('mssql+pyodbc://DTC-SQL10/MasterCallDb')
-#               df.to_sql('InmateCalls', engine, if_exists='append')
 
-                    
-                    # SQL using stored procedure
+                self.addToSQL(df)
 
-                x = 0                   
-                    
+            except IOError, e:
+                tkMessageBox.showerror("InPho", "SQL error: " + str(e))
+    def prepareMetadataFrame(self, InPhoFrame):
+
+        if importTool.isDocket:
+            InPhoFrame['MatterName'] = "People v. " + str(importTool.defendant.title()).strip()
+            InPhoFrame['Bureau'] = str(importTool.bureau)
+        elif importTool.isIndictment:
+            InPhoFrame['MatterName'] = "People v. " + str(importTool.defendant.title()).strip()
+            InPhoFrame['Bureau'] = str(importTool.bureau)
+        elif importTool.isArrestID:
+            InPhoFrame['MatterName'] = "People v. " + str(importTool.defendant.title()).strip()
+            InPhoFrame['Bureau'] = str(importTool.bureau)
+        elif importTool.isICMS:
+            InPhoFrame['MatterName'] = str(importTool.casename)
+            InPhoFrame['Bureau'] = str(importTool.Bureau)
+        elif importTool.isFNumber:
+            InPhoFrame['MatterName'] = str(importTool.InvestigationName)
+            InPhoFrame['Bureau'] = str(importTool.BureauFullName)
+        else:
+            InPhoFrame['MatterName'] = "Unknown matter name"
+            InPhoFrame['Bureau'] = "Unknown bureau name"
+
+        InPhoFrame['Contact'] = str(importTool.ADA)
+        InPhoFrame['ContactUsername'] = str(importTool.ADAUsername)        
+
+        tmpMatter = app.matterVariable.get().upper()
+        tmpPartial = app.partialVar.get().upper()
+
+        if len(tmpPartial) > 0:
+            InPhoFrame['MatterNumber'] = tmpMatter + tmpPartial
+        else:
+            InPhoFrame['MatterNumber'] = tmpMatter
+
+        InPhoFrame['ComplianceMethod'] = app.complianceMethodVariable.get()
+        InPhoFrame['NumberOfDisks'] = 1
+        InPhoFrame['DOCTrackingNumber'] = ""
+        InPhoFrame['ProcessedBy'] = getpass.getuser()
+        InPhoFrame['DateTimeProcessed'] = datetime.datetime.now()        
+
+        # Reorder some columns                
+        InPhoFrame = InPhoFrame[['InmateName', 'NYSID', 'BAC', 'DateTime', 'NumberDialed', 'Duration', 'Facility', 'Extension', 'FileName', 'MatterName', 'MatterNumber', 'Contact', 'ContactUsername', 'Bureau', 'ComplianceMethod', 'DOCTrackingNumber', 'NumberOfDisks', 'ProcessedBy', 'DateTimeProcessed']]
+
+        print InPhoFrame
+        return InPhoFrame
+
+    def addToSQL(self, InPhoFrame):
+                # SQL using stored procedure
+
+
+                numberOfCalls = len(InPhoFrame.index) 
+                x = 0
                 while x < numberOfCalls:
                         
-#                       sqlInmateName = 'N' + df.loc[x, 'InmateName']
-#                       sqlNYSID = 'N' + df.loc[x, 'NYSID']
-#                       sqlBAC = 'N' + df.loc[x, 'BAC']
-#                       sqlDateTime = 'N' + df.loc[x, 'DateTime']
-#                       sqlNumberDialed = 'N' + df.loc[x, 'NumberDialed']
-#                       sqlDuration = 'N' + df.loc[x, 'Duration']
-#                       sqlFacility = 'N' + df.loc[x, 'Facility']
-#                       sqlExtension = 'N' + df.loc[x, 'Extension']
-#                       sqlFileName = 'N' + df.loc[x, 'FileName']
-#                       sqlMatterName = 'N' + df.loc[x, 'MatterName']
-#                       sqlMatterNumber = 'N' + df.loc[x, 'MatterNumber']
-#                       sqlContact = 'N' + df.loc[x, 'Contact']
-#                       sqlContactUsername = 'N' + df.loc[x, 'ContactUsername']
-#                       sqlBureau = 'N' + df.loc[x, 'Bureau']
-#                       sqlComplianceMethod = 'N' + df.loc[x, 'ComplianceMethod']
-#                       sqlDOCTrackingNumber = 'N' + df.loc[x, 'DOCTrackingNumber']
-#                       sqlNumberOfDisks = 'N' + df.loc[x, 'NumberOfDisks']
-#                       sqlProcessedBy = 'N' + df.loc[x, 'ProcessedBy']
-#                       sqlDateTimeProcessed = 'N' + df.loc[x, 'DateTimeProcessed']
-
-                    sqlInmateName = str(df.loc[x, 'InmateName'])
-                    sqlNYSID = df.loc[x, 'NYSID']
-                    sqlBAC = df.loc[x, 'BAC']
-                    sqlDateTime = df.loc[x, 'DateTime']
-                    sqlNumberDialed = df.loc[x, 'NumberDialed']
-                    sqlDuration = df.loc[x, 'Duration']
-                    sqlFacility = df.loc[x, 'Facility']
-                    sqlExtension = df.loc[x, 'Extension']
-                    sqlFileName = df.loc[x, 'FileName']
-                    sqlMatterName = str(df.loc[x, 'MatterName'])
-                    sqlMatterNumber = df.loc[x, 'MatterNumber']
-                    sqlContact = str(df.loc[x, 'Contact'])
-                    sqlContactUsername = df.loc[x, 'ContactUsername']
-                    sqlBureau = df.loc[x, 'Bureau']
-                    sqlComplianceMethod = df.loc[x, 'ComplianceMethod']
-                    sqlDOCTrackingNumber = df.loc[x, 'DOCTrackingNumber']
-                    sqlNumberOfDisks = df.loc[x, 'NumberOfDisks']
-                    sqlProcessedBy = df.loc[x, 'ProcessedBy']
-                    sqlDateTimeProcessed = str(df.loc[x, 'DateTimeProcessed'])
+                    sqlInmateName = str(InPhoFrame.loc[x, 'InmateName'])
+                    sqlNYSID = InPhoFrame.loc[x, 'NYSID']
+                    sqlBAC = InPhoFrame.loc[x, 'BAC']
+                    sqlDateTime = InPhoFrame.loc[x, 'DateTime']
+                    sqlNumberDialed = InPhoFrame.loc[x, 'NumberDialed']
+                    sqlDuration = InPhoFrame.loc[x, 'Duration']
+                    sqlFacility = InPhoFrame.loc[x, 'Facility']
+                    sqlExtension = InPhoFrame.loc[x, 'Extension']
+                    sqlFileName = InPhoFrame.loc[x, 'FileName']
+                    sqlMatterName = str(InPhoFrame.loc[x, 'MatterName'])
+                    sqlMatterNumber = InPhoFrame.loc[x, 'MatterNumber']
+                    sqlContact = str(InPhoFrame.loc[x, 'Contact'])
+                    sqlContactUsername = InPhoFrame.loc[x, 'ContactUsername']
+                    sqlBureau = InPhoFrame.loc[x, 'Bureau']
+                    sqlComplianceMethod = InPhoFrame.loc[x, 'ComplianceMethod']
+                    sqlDOCTrackingNumber = InPhoFrame.loc[x, 'DOCTrackingNumber']
+                    sqlNumberOfDisks = InPhoFrame.loc[x, 'NumberOfDisks']
+                    sqlProcessedBy = InPhoFrame.loc[x, 'ProcessedBy']
+                    sqlDateTimeProcessed = str(InPhoFrame.loc[x, 'DateTimeProcessed'])
                     sqlInmateName = sqlInmateName.replace("'","''")
                     sqlMatterName = sqlMatterName.replace("'","''")
                     sqlContact = sqlContact.replace("'","''")    
@@ -507,10 +533,6 @@ class ImportTool:
                     cursor.commit()            
 
                     x += 1
-       
-       
-            except IOError, e:
-                tkMessageBox.showerror("InPho", "Error: " + str(e))
             
 
     # Validation for matterNumber
