@@ -56,6 +56,7 @@ def build_metadata_frame(pathOfFiles):
   # loop to get my list of values
   for file in fullPaths:
     track = FLAC(file)
+    print file
     try:
       called_numbers.append(''.join(track.get('called_number')))
       nysids.append(''.join(track.get('nysid')))
@@ -100,8 +101,7 @@ def create_InPho_frame(src):
 
   # toss the isolated time and date columns
   df['DateTime'] = pd.DatetimeIndex(df['start_date'] + df['start_time'])
-  df = df.drop(['start_time', 'start_date'], 1)
-
+  
   result = df
 
   return result
