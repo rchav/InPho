@@ -1,6 +1,6 @@
 """
 ******************************************************************************
-DANY InPho: Import Tool v1.0.0
+InPho: Import Tool v1.1.0
 Robert Chavez
 All rights reserved
 ******************************************************************************
@@ -554,7 +554,7 @@ class ImportTool:
         self.isDocket = (("N" in matterNumber) or ("n" in matterNumber)) and (matterNumber.startswith("20") or matterNumber.startswith("19"))
         self.isIndictment = "/" in matterNumber
         self.isArrestID = (("M" in matterNumber) or ("m" in matterNumber)) and len(matterNumber) == 9
-        self.isICMS = firstChar.isalpha() and (firstChar != "F" and firstChar != "f") and (secondChar.isalpha() == False)
+        self.isICMS = firstChar.isalpha() == False 
         self.isFNumber = (("F" == firstChar) or ("f" == firstChar)) and len(matterNumber) == 12
         
 
@@ -958,7 +958,7 @@ importTool = ImportTool()
 
 # interface entry point
 app = interface(None)
-app.title('DANY InPho (v.1.0)')
-app.iconbitmap(r'\\DANY.NYCNET\DANYXDrive\Rikers Calls\InPho\InPho Icon.ico')
+app.title('DANY InPho (v.1.1)')
+#app.iconbitmap(r'\\DANY.NYCNET\DANYXDrive\Rikers Calls\InPho\InPho Icon.ico')
 
 app.mainloop()
